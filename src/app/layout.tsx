@@ -13,7 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja" className="h-full">
-      <body className="min-h-full bg-white">{children}</body>
+      {/* ブラウザ拡張が body に属性を注入してハイドレーション警告を出すことがあるため抑制 */}
+      <body className="min-h-full bg-white" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   )
 }
