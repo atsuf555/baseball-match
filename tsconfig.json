@@ -6,6 +6,9 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Node のネイティブ TS テストランナーは import 時に .ts 拡張子を要求するため許可する
+    // （noEmit: true のときのみ有効化できる）
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
