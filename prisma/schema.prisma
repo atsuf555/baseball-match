@@ -70,6 +70,23 @@ model Team {
   createdAt   DateTime @default(now())
 
   members TeamMember[]
+  games   Game[]
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  teamId      String
+  startsAt    DateTime // 試合日時
+  location    String // 場所
+  meetTime    String // 集合時間（"HH:mm" 形式）
+  capacity    Int? // 定員（任意）
+  note        String?  @db.Text // メモ（任意）
+  createdById String
+  createdAt   DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
 }
 
 enum TeamRole {

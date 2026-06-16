@@ -19,3 +19,16 @@ export function generateInviteCode(): string {
 export function normalizeInviteCode(input: string): string {
   return input.trim().toUpperCase()
 }
+
+// 試合日時を日本時間で「6月20日(土) 10:00」形式に整形する
+// サーバーのタイムゾーンに依存しないよう Asia/Tokyo を明示する
+export function formatGameDateTime(date: Date): string {
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tokyo",
+  }).format(date)
+}

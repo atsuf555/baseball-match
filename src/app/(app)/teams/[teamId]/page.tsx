@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { formatGameDateTime } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { CopyButton } from "@/components/CopyButton"
+import type { Game } from "@prisma/client"
 
 export default async function TeamDetailPage({
   params,
@@ -32,6 +34,20 @@ export default async function TeamDetailPage({
   }
 
   const isAdmin = myMembership.role === "ADMIN"
+
+  // 試合一覧を取得して「今後」と「過去」に振り分ける
+  const games = await prisma.game.findMany({
+    where: { teamId: team.id },
+    orderBy: { startsAt: "asc" },
+  })
+  // リクエストごとに実行される動的 Server Component なので現在時刻の参照は妥当
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now()
+  const upcomingGames = games.filter((g) => g.startsAt.getTime() >= now)
+  // 過去は新しい順（直近の試合を上に）
+  const pastGames = games
+    .filter((g) => g.startsAt.getTime() < now)
+    .reverse()
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -81,6 +97,69 @@ export default async function TeamDetailPage({
             </div>
           </section>
         )}
+
+        {/* 試合 */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-zinc-900">試合</h2>
+            {isAdmin && (
+              <Link
+                href={`/teams/${teamId}/games/new`}
+                className="inline-flex items-center gap-1 bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <span aria-hidden>+</span> 試合を作成
+              </Link>
+            )}
+          </div>
+
+          {games.length === 0 ? (
+            <div className="bg-white border border-zinc-200 rounded-xl p-6 text-center">
+              <p className="text-sm text-zinc-400">まだ試合がありません</p>
+              {isAdmin && (
+                <Link
+                  href={`/teams/${teamId}/games/new`}
+                  className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  最初の試合を作成する
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* 今後の試合 */}
+              <div>
+                <h3 className="text-xs font-medium text-zinc-400 mb-2">
+                  今後の試合（{upcomingGames.length}）
+                </h3>
+                {upcomingGames.length === 0 ? (
+                  <p className="text-sm text-zinc-400 px-1">
+                    予定されている試合はありません
+                  </p>
+                ) : (
+                  <ul className="space-y-2">
+                    {upcomingGames.map((game) => (
+                      <GameRow key={game.id} game={game} teamId={teamId} />
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* 過去の試合 */}
+              {pastGames.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-medium text-zinc-400 mb-2">
+                    過去の試合（{pastGames.length}）
+                  </h3>
+                  <ul className="space-y-2">
+                    {pastGames.map((game) => (
+                      <GameRow key={game.id} game={game} teamId={teamId} past />
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* メンバー一覧 */}
         <section>
@@ -133,5 +212,41 @@ export default async function TeamDetailPage({
         </section>
       </main>
     </div>
+  )
+}
+
+// 試合一覧の1行（チーム詳細から試合詳細へのリンク）
+function GameRow({
+  game,
+  teamId,
+  past = false,
+}: {
+  game: Game
+  teamId: string
+  past?: boolean
+}) {
+  return (
+    <li>
+      <Link
+        href={`/teams/${teamId}/games/${game.id}`}
+        className={`block bg-white border border-zinc-200 rounded-xl p-4 hover:border-zinc-300 transition-colors ${
+          past ? "opacity-70" : ""
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-zinc-900 truncate">
+            {formatGameDateTime(game.startsAt)}
+          </p>
+          <span className="text-zinc-300 shrink-0" aria-hidden>
+            ›
+          </span>
+        </div>
+        <p className="text-sm text-zinc-500 mt-1 truncate">{game.location}</p>
+        <p className="text-xs text-zinc-400 mt-1">
+          集合 {game.meetTime}
+          {game.capacity != null && ` ・ 定員 ${game.capacity}人`}
+        </p>
+      </Link>
+    </li>
   )
 }
