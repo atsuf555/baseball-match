@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Design docs (tracked separately from code)
-# Uncomment below if you want to exclude:
-# DESIGN.md
+# env files — allow .env.example as template
+!.env.example
+
+# Claude Code internal files
+.claude/
+AGENTS.md
+CLAUDE.md
