@@ -82,8 +82,17 @@ export function NewGameForm({ teamId }: { teamId: string }) {
       <div>
         <label htmlFor="startsAt" className="block text-sm font-medium text-zinc-700 mb-1.5">
           試合日時<span className="text-red-500 ml-0.5">*</span>
+          <span className="text-zinc-400 text-xs font-normal ml-1">（30分単位）</span>
         </label>
-        <input id="startsAt" name="startsAt" type="datetime-local" required className={inputClass} />
+        {/* step=1800秒 で30分刻みに */}
+        <input
+          id="startsAt"
+          name="startsAt"
+          type="datetime-local"
+          step={1800}
+          required
+          className={inputClass}
+        />
       </div>
 
       {/* 場所 */}
@@ -107,8 +116,10 @@ export function NewGameForm({ teamId }: { teamId: string }) {
       <div>
         <label htmlFor="meetTime" className="block text-sm font-medium text-zinc-700 mb-1.5">
           集合時間<span className="text-red-500 ml-0.5">*</span>
+          <span className="text-zinc-400 text-xs font-normal ml-1">（30分単位）</span>
         </label>
-        <input id="meetTime" name="meetTime" type="time" required className={inputClass} />
+        {/* step=1800秒 で30分刻みに */}
+        <input id="meetTime" name="meetTime" type="time" step={1800} required className={inputClass} />
       </div>
 
       {/* 定員（任意） */}

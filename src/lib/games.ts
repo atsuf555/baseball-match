@@ -13,7 +13,8 @@ export type GameValidationResult =
   | { ok: true; value: ValidatedGame }
   | { ok: false; error: string }
 
-const MEET_TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/ // "HH:mm" (00:00〜23:59)
+// "HH:mm" かつ分は 00 または 30 のみ（30分単位）
+const MEET_TIME_PATTERN = /^([01]\d|2[0-3]):(00|30)$/
 const MAX_LOCATION_LENGTH = 100
 const MAX_NOTE_LENGTH = 500
 const MAX_CAPACITY = 999
@@ -32,6 +33,10 @@ export function validateGameInput(body: unknown): GameValidationResult {
   if (Number.isNaN(startsAt.getTime())) {
     return { ok: false, error: "試合日時を正しく入力してください" }
   }
+  // 30分単位のみ許可（日本は UTC+9 で分は変わらないため UTC の分で判定可能）
+  if (startsAt.getUTCMinutes() % 30 !== 0 || startsAt.getUTCSeconds() !== 0) {
+    return { ok: false, error: "試合日時は30分単位で入力してください" }
+  }
 
   // 場所
   if (typeof data.location !== "string" || data.location.trim() === "") {
@@ -47,7 +52,10 @@ export function validateGameInput(body: unknown): GameValidationResult {
 
   // 集合時間
   if (typeof data.meetTime !== "string" || !MEET_TIME_PATTERN.test(data.meetTime)) {
-    return { ok: false, error: "集合時間を正しく入力してください" }
+    return {
+      ok: false,
+      error: "集合時間は30分単位（00分・30分）で入力してください",
+    }
   }
   const meetTime = data.meetTime
 

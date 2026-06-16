@@ -66,6 +66,32 @@ test("validateGameInput: 集合時間の形式が不正ならエラー", () => {
   }
 })
 
+test("validateGameInput: 集合時間が30分単位でなければエラー", () => {
+  for (const meetTime of ["09:15", "09:45", "10:01", "10:29"]) {
+    const r = validateGameInput({ ...valid, meetTime })
+    assert.equal(r.ok, false, `"${meetTime}" は30分単位でないので不正なはず`)
+  }
+})
+
+test("validateGameInput: 集合時間が00分/30分なら受け付ける", () => {
+  for (const meetTime of ["00:00", "09:00", "09:30", "23:30"]) {
+    const r = validateGameInput({ ...valid, meetTime })
+    assert.ok(r.ok, `"${meetTime}" は受け付けるはず`)
+  }
+})
+
+test("validateGameInput: 試合日時が30分単位でなければエラー", () => {
+  // 2026-06-20 10:15 JST = 01:15 UTC（分は15なので不正）
+  const r = validateGameInput({ ...valid, startsAt: "2026-06-20T01:15:00.000Z" })
+  assert.equal(r.ok, false)
+})
+
+test("validateGameInput: 試合日時が30分単位なら受け付ける", () => {
+  // 01:30 UTC（分は30なので妥当）
+  const r = validateGameInput({ ...valid, startsAt: "2026-06-20T01:30:00.000Z" })
+  assert.ok(r.ok)
+})
+
 test("validateGameInput: 定員が範囲外/非整数ならエラー", () => {
   for (const capacity of [0, -3, 1000, 1.5]) {
     const r = validateGameInput({ ...valid, capacity })
