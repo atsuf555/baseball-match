@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth"
+import Link from "next/link"
 
 export default function LandingPage() {
   return (
@@ -66,6 +67,14 @@ export default function LandingPage() {
             Googleでログイン
           </button>
         </form>
+
+        {/* 助っ人募集（チーム外ユーザーでも閲覧可） */}
+        <Link
+          href="/helpers"
+          className="block text-center text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium mt-6"
+        >
+          助っ人募集を見る
+        </Link>
       </div>
     </div>
   )

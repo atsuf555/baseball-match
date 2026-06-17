@@ -10,6 +10,7 @@ import {
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { AttendancePanel } from "./AttendancePanel"
+import { HelperRequestsPanel } from "./HelperRequestsPanel"
 
 export default async function GameDetailPage({
   params,
@@ -29,6 +30,12 @@ export default async function GameDetailPage({
       team: { select: { id: true, name: true } },
       attendances: {
         select: { userId: true, status: true },
+      },
+      helperRequests: {
+        include: {
+          applications: { include: { user: { select: { name: true, email: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
       },
     },
   })
@@ -198,6 +205,23 @@ export default async function GameDetailPage({
               })}
             </div>
           </section>
+        )}
+
+        {/* 管理者向け：助っ人募集の作成・応募者確認・締め切り */}
+        {isAdmin && (
+          <HelperRequestsPanel
+            gameId={game.id}
+            initialRequests={game.helperRequests.map((r) => ({
+              id: r.id,
+              positions: r.positions,
+              capacity: r.capacity,
+              note: r.note,
+              status: r.status,
+              applicants: r.applications.map((a) => ({
+                name: a.user.name ?? a.user.email ?? "名前未設定",
+              })),
+            }))}
+          />
         )}
       </main>
     </div>

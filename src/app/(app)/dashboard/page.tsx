@@ -28,6 +28,12 @@ export default async function DashboardPage() {
       <header className="bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
         <span className="font-bold text-zinc-900 text-lg">BaseHub</span>
         <div className="flex items-center gap-3">
+          <Link
+            href="/helpers"
+            className="text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium"
+          >
+            助っ人募集
+          </Link>
           {session?.user?.image && (
             <img
               src={session.user.image}

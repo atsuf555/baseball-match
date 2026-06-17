@@ -56,10 +56,11 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
 
-  accounts        Account[]
-  sessions        Session[]
-  teamMemberships TeamMember[]
-  attendances     Attendance[]
+  accounts           Account[]
+  sessions           Session[]
+  teamMemberships    TeamMember[]
+  attendances        Attendance[]
+  helperApplications HelperApplication[]
 }
 
 model Team {
@@ -86,8 +87,9 @@ model Game {
   createdById String
   createdAt   DateTime @default(now())
 
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  attendances Attendance[]
+  team           Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  attendances    Attendance[]
+  helperRequests HelperRequest[]
 
   @@index([teamId])
 }
@@ -133,5 +135,44 @@ model Attendance {
 
   @@unique([gameId, userId])
   @@index([gameId])
+  @@index([userId])
+}
+
+// 助っ人募集の状態
+enum HelperRequestStatus {
+  OPEN // 募集中
+  CLOSED // 募集終了
+}
+
+// 試合ごとの助っ人募集（管理者が作成）
+model HelperRequest {
+  id          String              @id @default(cuid())
+  gameId      String
+  createdById String
+  positions   String? // 募集ポジション（任意・自由記述）
+  capacity    Int // 募集人数
+  note        String?             @db.Text // メモ（任意）
+  status      HelperRequestStatus @default(OPEN)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  game         Game                @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  applications HelperApplication[]
+
+  @@index([gameId])
+}
+
+// 助っ人募集への応募（チーム外ユーザーが応募する。1募集につき1ユーザー1件）
+model HelperApplication {
+  id              String   @id @default(cuid())
+  helperRequestId String
+  userId          String
+  createdAt       DateTime @default(now())
+
+  helperRequest HelperRequest @relation(fields: [helperRequestId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([helperRequestId, userId])
+  @@index([helperRequestId])
   @@index([userId])
 }
