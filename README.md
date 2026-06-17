@@ -466,20 +466,60 @@ set -a && source .env.local && set +a && npx prisma studio
 
 ## Vercel へのデプロイ（本番環境）
 
-1. [Vercel](https://vercel.com) でプロジェクトを作成してリポジトリを接続
-2. Vercel Postgres を作成してプロジェクトに接続（`DATABASE_URL` が自動設定される）
-3. 以下の環境変数を Vercel ダッシュボードで設定：
-   - `AUTH_SECRET`
-   - `AUTH_GOOGLE_ID`
-   - `AUTH_GOOGLE_SECRET`
-4. Google Cloud Console でリダイレクト URI を追加：
+本番DBは [Supabase](https://supabase.com) の PostgreSQL を使用します。
+Supabase の Data API・RLS は使わず、Prisma から直接 PostgreSQL に接続する構成です。
+
+### 1. 環境変数
+
+Vercel ダッシュボードの **Project Settings → Environment Variables** に以下を設定します。
+
+| 変数名 | 説明 | 取得場所 |
+|--------|------|----------|
+| `DATABASE_URL` | SupabaseのPostgreSQL接続URL（Transaction pooler／port 6543のURIを使用） | Supabase → Project Settings → Database → Connection string → **Transaction pooler** |
+| `AUTH_SECRET` | Auth.js（NextAuth）のセッション・トークン暗号化用シークレット | ターミナルで `openssl rand -base64 32` を実行して生成 |
+| `AUTH_GOOGLE_ID` | Google OAuth クライアントID | Google Cloud Console → APIs と サービス → 認証情報 |
+| `AUTH_GOOGLE_SECRET` | Google OAuth クライアントシークレット | Google Cloud Console → APIs と サービス → 認証情報 |
+
+> **`DATABASE_URL` に Transaction pooler を使う理由：**
+> Vercel の Serverless Functions は呼び出しごとに新しい接続を張るため、
+> Direct connection（port 5432）を直接使うと Supabase の同時接続数上限に達しやすくなります。
+> ランタイムでは PgBouncer 経由の Transaction pooler（port 6543、`?pgbouncer=true` 付き）を使ってください。
+> 一方で `prisma db push`（後述のマイグレーション）は pooler 経由だとスキーマ変更に失敗することがあるため、
+> **その時だけ** Direct connection の URL を使います。
+
+> Auth.js v5 はホスト判定に必要な `trustHost` を、Vercel が自動設定する `VERCEL` 環境変数から
+> 自動で有効化します。`AUTH_URL` / `AUTH_TRUST_HOST` を別途設定する必要はありません。
+
+### 2. Supabase プロジェクトの準備
+
+1. [Supabase](https://supabase.com) でプロジェクトを作成
+2. **Project Settings → Database → Connection string** を開く
+3. 表示される2種類のURLをそれぞれメモする：
+   - **Transaction pooler**（port 6543）→ Vercel の `DATABASE_URL` に設定する
+   - **Direct connection**（port 5432）→ 手順4のマイグレーションでのみ使う
+
+### 3. Vercel プロジェクトの作成
+
+1. [Vercel](https://vercel.com) で「Add New... → Project」からこのリポジトリを接続
+2. 「1. 環境変数」の4つを設定してデプロイを実行
+   （`package.json` の `postinstall` で `prisma generate` が自動実行されるため、追加設定は不要）
+3. Google Cloud Console で OAuth クライアントの「承認済みのリダイレクト URI」に本番URLを追加：
    ```
    https://your-domain.vercel.app/api/auth/callback/google
    ```
-5. デプロイ後のターミナルで以下を実行してスキーマを適用：
-   ```bash
-   npx prisma db push
-   ```
+
+### 4. 本番DBへのスキーマ反映（マイグレーション）
+
+初回デプロイ後、ローカルのターミナルから本番DBにスキーマを適用します。
+このコマンドは **Direct connection**（port 5432）のURLを使って一度だけ実行します。
+
+```bash
+DATABASE_URL="（Supabaseの Direct connection URL）" npx prisma db push
+```
+
+成功すると `The database is now in sync with your Prisma schema.` と表示されます。
+以降、スキーマ（`prisma/schema.prisma`）を変更してデプロイするたびに、同じコマンドを再実行してください
+（このコマンドは Vercel のビルドでは自動実行されません。スキーマ変更を伴わないデプロイでは不要です）。
 
 ---
 
