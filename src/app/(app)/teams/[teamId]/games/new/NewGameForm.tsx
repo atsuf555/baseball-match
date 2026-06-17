@@ -7,6 +7,13 @@ import Link from "next/link"
 const inputClass =
   "w-full border border-zinc-300 rounded-xl px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white"
 
+// 0:00〜23:30 を30分刻みで生成（"HH:MM" 形式）
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
+  const hour = String(Math.floor(i / 2)).padStart(2, "0")
+  const minute = i % 2 === 0 ? "00" : "30"
+  return `${hour}:${minute}`
+})
+
 export function NewGameForm({ teamId }: { teamId: string }) {
   const router = useRouter()
   const [error, setError] = useState("")
@@ -18,13 +25,15 @@ export function NewGameForm({ teamId }: { teamId: string }) {
 
     const form = e.currentTarget
     const fd = new FormData(form)
-    const startsAtLocal = (fd.get("startsAt") as string) ?? ""
+    const startsDate = (fd.get("startsDate") as string) ?? ""
+    const startsTime = (fd.get("startsTime") as string) ?? ""
     const location = ((fd.get("location") as string) ?? "").trim()
     const meetTime = (fd.get("meetTime") as string) ?? ""
+    const startTime = (fd.get("startTime") as string) ?? ""
     const capacityRaw = ((fd.get("capacity") as string) ?? "").trim()
     const note = ((fd.get("note") as string) ?? "").trim()
 
-    if (!startsAtLocal) {
+    if (!startsDate || !startsTime) {
       setError("試合日時を入力してください")
       return
     }
@@ -36,6 +45,10 @@ export function NewGameForm({ teamId }: { teamId: string }) {
       setError("集合時間を入力してください")
       return
     }
+    if (!startTime) {
+      setError("試合開始時間を入力してください")
+      return
+    }
 
     setPending(true)
     setError("")
@@ -45,11 +58,12 @@ export function NewGameForm({ teamId }: { teamId: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // datetime-local の値はタイムゾーン無しなので、ブラウザのローカル時刻として
+          // 日付 + 時間を結合した値はタイムゾーン無しなので、ブラウザのローカル時刻として
           // Date 化し ISO 文字列（UTC）に変換して送る
-          startsAt: new Date(startsAtLocal).toISOString(),
+          startsAt: new Date(`${startsDate}T${startsTime}`).toISOString(),
           location,
           meetTime,
+          startTime,
           capacity: capacityRaw === "" ? null : Number(capacityRaw),
           note: note === "" ? null : note,
         }),
@@ -80,19 +94,35 @@ export function NewGameForm({ teamId }: { teamId: string }) {
 
       {/* 試合日時 */}
       <div>
-        <label htmlFor="startsAt" className="block text-sm font-medium text-zinc-700 mb-1.5">
+        <label htmlFor="startsDate" className="block text-sm font-medium text-zinc-700 mb-1.5">
           試合日時<span className="text-red-500 ml-0.5">*</span>
           <span className="text-zinc-400 text-xs font-normal ml-1">（30分単位）</span>
         </label>
-        {/* step=1800秒 で30分刻みに */}
-        <input
-          id="startsAt"
-          name="startsAt"
-          type="datetime-local"
-          step={1800}
-          required
-          className={inputClass}
-        />
+        <div className="flex gap-2">
+          <input
+            id="startsDate"
+            name="startsDate"
+            type="date"
+            required
+            className={`${inputClass} flex-1`}
+          />
+          <select
+            id="startsTime"
+            name="startsTime"
+            required
+            defaultValue=""
+            className={`${inputClass} w-32`}
+          >
+            <option value="" disabled>
+              時間
+            </option>
+            {TIME_OPTIONS.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* 場所 */}
@@ -118,8 +148,34 @@ export function NewGameForm({ teamId }: { teamId: string }) {
           集合時間<span className="text-red-500 ml-0.5">*</span>
           <span className="text-zinc-400 text-xs font-normal ml-1">（30分単位）</span>
         </label>
-        {/* step=1800秒 で30分刻みに */}
-        <input id="meetTime" name="meetTime" type="time" step={1800} required className={inputClass} />
+        <select id="meetTime" name="meetTime" required defaultValue="" className={inputClass}>
+          <option value="" disabled>
+            時間を選択
+          </option>
+          {TIME_OPTIONS.map((time) => (
+            <option key={time} value={time}>
+              {time}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 試合開始時間 */}
+      <div>
+        <label htmlFor="startTime" className="block text-sm font-medium text-zinc-700 mb-1.5">
+          試合開始時間<span className="text-red-500 ml-0.5">*</span>
+          <span className="text-zinc-400 text-xs font-normal ml-1">（30分単位）</span>
+        </label>
+        <select id="startTime" name="startTime" required defaultValue="" className={inputClass}>
+          <option value="" disabled>
+            時間を選択
+          </option>
+          {TIME_OPTIONS.map((time) => (
+            <option key={time} value={time}>
+              {time}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* 定員（任意） */}

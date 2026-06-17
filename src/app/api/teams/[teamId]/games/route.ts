@@ -77,6 +77,7 @@ export async function POST(
       startsAt: result.value.startsAt,
       location: result.value.location,
       meetTime: result.value.meetTime,
+      startTime: result.value.startTime,
       capacity: result.value.capacity,
       note: result.value.note,
     },

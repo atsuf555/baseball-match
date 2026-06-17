@@ -5,6 +5,7 @@ export type ValidatedGame = {
   startsAt: Date
   location: string
   meetTime: string
+  startTime: string
   capacity: number | null
   note: string | null
 }
@@ -13,8 +14,8 @@ export type GameValidationResult =
   | { ok: true; value: ValidatedGame }
   | { ok: false; error: string }
 
-// "HH:mm" かつ分は 00 または 30 のみ（30分単位）
-const MEET_TIME_PATTERN = /^([01]\d|2[0-3]):(00|30)$/
+// "HH:mm" かつ分は 00 または 30 のみ（30分単位）。集合時間・試合開始時間で共用
+const TIME_PATTERN = /^([01]\d|2[0-3]):(00|30)$/
 const MAX_LOCATION_LENGTH = 100
 const MAX_NOTE_LENGTH = 500
 const MAX_CAPACITY = 999
@@ -51,13 +52,22 @@ export function validateGameInput(body: unknown): GameValidationResult {
   }
 
   // 集合時間
-  if (typeof data.meetTime !== "string" || !MEET_TIME_PATTERN.test(data.meetTime)) {
+  if (typeof data.meetTime !== "string" || !TIME_PATTERN.test(data.meetTime)) {
     return {
       ok: false,
       error: "集合時間は30分単位（00分・30分）で入力してください",
     }
   }
   const meetTime = data.meetTime
+
+  // 試合開始時間
+  if (typeof data.startTime !== "string" || !TIME_PATTERN.test(data.startTime)) {
+    return {
+      ok: false,
+      error: "試合開始時間は30分単位（00分・30分）で入力してください",
+    }
+  }
+  const startTime = data.startTime
 
   // 定員（任意）
   let capacity: number | null = null
@@ -89,5 +99,8 @@ export function validateGameInput(body: unknown): GameValidationResult {
     note = trimmed === "" ? null : trimmed
   }
 
-  return { ok: true, value: { startsAt, location, meetTime, capacity, note } }
+  return {
+    ok: true,
+    value: { startsAt, location, meetTime, startTime, capacity, note },
+  }
 }

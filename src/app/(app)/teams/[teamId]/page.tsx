@@ -6,6 +6,8 @@ import Link from "next/link"
 import { CopyButton } from "@/components/CopyButton"
 import type { Game } from "@prisma/client"
 
+type GameWithAttendingCount = Game & { attendingCount: number }
+
 export default async function TeamDetailPage({
   params,
 }: PageProps<"/teams/[teamId]">) {
@@ -36,10 +38,18 @@ export default async function TeamDetailPage({
   const isAdmin = myMembership.role === "ADMIN"
 
   // 試合一覧を取得して「今後」と「過去」に振り分ける
-  const games = await prisma.game.findMany({
+  // 参加人数は出欠一覧画面と同じ集計（ATTENDING の件数）を一覧カードにも出す
+  const gamesRaw = await prisma.game.findMany({
     where: { teamId: team.id },
     orderBy: { startsAt: "asc" },
+    include: {
+      _count: { select: { attendances: { where: { status: "ATTENDING" } } } },
+    },
   })
+  const games: GameWithAttendingCount[] = gamesRaw.map((g) => ({
+    ...g,
+    attendingCount: g._count.attendances,
+  }))
   // リクエストごとに実行される動的 Server Component なので現在時刻の参照は妥当
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now()
@@ -221,7 +231,7 @@ function GameRow({
   teamId,
   past = false,
 }: {
-  game: Game
+  game: GameWithAttendingCount
   teamId: string
   past?: boolean
 }) {
@@ -243,8 +253,9 @@ function GameRow({
         </div>
         <p className="text-sm text-zinc-500 mt-1 truncate">{game.location}</p>
         <p className="text-xs text-zinc-400 mt-1">
-          集合 {game.meetTime}
+          開始 {game.startTime}
           {game.capacity != null && ` ・ 定員 ${game.capacity}人`}
+          {` ・ 参加 ${game.attendingCount}人`}
         </p>
       </Link>
     </li>

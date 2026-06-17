@@ -59,6 +59,7 @@ model User {
   accounts        Account[]
   sessions        Session[]
   teamMemberships TeamMember[]
+  attendances     Attendance[]
 }
 
 model Team {
@@ -79,12 +80,14 @@ model Game {
   startsAt    DateTime // 試合日時
   location    String // 場所
   meetTime    String // 集合時間（"HH:mm" 形式）
+  startTime   String // 試合開始時間（"HH:mm" 形式。集合時間とは別に管理する）
   capacity    Int? // 定員（任意）
   note        String?  @db.Text // メモ（任意）
   createdById String
   createdAt   DateTime @default(now())
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  attendances Attendance[]
 
   @@index([teamId])
 }
@@ -106,5 +109,29 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@index([teamId])
+  @@index([userId])
+}
+
+// 出欠の回答状態
+enum AttendanceStatus {
+  ATTENDING // 参加
+  ABSENT // 欠席
+  UNDECIDED // 未定
+}
+
+// 試合ごと・ユーザーごとの出欠回答（1試合につき1ユーザー1件）
+model Attendance {
+  id        String           @id @default(cuid())
+  gameId    String
+  userId    String
+  status    AttendanceStatus
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, userId])
+  @@index([gameId])
   @@index([userId])
 }

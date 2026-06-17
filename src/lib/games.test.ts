@@ -6,6 +6,7 @@ const valid = {
   startsAt: "2026-06-20T01:00:00.000Z",
   location: "区民グラウンド",
   meetTime: "09:30",
+  startTime: "10:00",
   capacity: 15,
   note: "スパイク不可",
 }
@@ -16,6 +17,7 @@ test("validateGameInput: 妥当な入力を受け付け正規化する", () => {
   assert.ok(r.value.startsAt instanceof Date)
   assert.equal(r.value.location, "区民グラウンド")
   assert.equal(r.value.meetTime, "09:30")
+  assert.equal(r.value.startTime, "10:00")
   assert.equal(r.value.capacity, 15)
   assert.equal(r.value.note, "スパイク不可")
 })
@@ -25,6 +27,7 @@ test("validateGameInput: 定員・メモは任意（省略可）", () => {
     startsAt: valid.startsAt,
     location: "A面",
     meetTime: "10:00",
+    startTime: "10:30",
   })
   assert.ok(r.ok)
   assert.equal(r.value.capacity, null)
@@ -77,6 +80,27 @@ test("validateGameInput: 集合時間が00分/30分なら受け付ける", () =>
   for (const meetTime of ["00:00", "09:00", "09:30", "23:30"]) {
     const r = validateGameInput({ ...valid, meetTime })
     assert.ok(r.ok, `"${meetTime}" は受け付けるはず`)
+  }
+})
+
+test("validateGameInput: 試合開始時間の形式が不正ならエラー", () => {
+  for (const startTime of ["9:30", "25:00", "10:60", "1030", "", "abc"]) {
+    const r = validateGameInput({ ...valid, startTime })
+    assert.equal(r.ok, false, `"${startTime}" は不正なはず`)
+  }
+})
+
+test("validateGameInput: 試合開始時間が30分単位でなければエラー", () => {
+  for (const startTime of ["09:15", "09:45", "10:01", "10:29"]) {
+    const r = validateGameInput({ ...valid, startTime })
+    assert.equal(r.ok, false, `"${startTime}" は30分単位でないので不正なはず`)
+  }
+})
+
+test("validateGameInput: 試合開始時間が00分/30分なら受け付ける", () => {
+  for (const startTime of ["00:00", "09:00", "09:30", "23:30"]) {
+    const r = validateGameInput({ ...valid, startTime })
+    assert.ok(r.ok, `"${startTime}" は受け付けるはず`)
   }
 })
 
