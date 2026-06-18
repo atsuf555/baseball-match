@@ -178,6 +178,7 @@ model HelperRequest {
   count        Int                 @default(1) // 募集人数
   note         String?             @db.Text // メモ（任意）
   contactEmail String // 代表者メールアドレス（連絡先・必須）
+  prefecture   String              @default("東京都") // 都道府県（地域絞り込み用・必須）
   status       HelperRequestStatus @default(OPEN)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
@@ -221,6 +222,7 @@ model MemberRequest {
   level        String? // レベル感（任意・例：初心者歓迎、中級者以上など）
   note         String?             @db.Text // メモ（任意）
   contactEmail String // 代表者メールアドレス（連絡先・必須）
+  prefecture   String              @default("東京都") // 都道府県（地域絞り込み用・必須）
   status       MemberRequestStatus @default(OPEN)
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
@@ -247,6 +249,7 @@ model GroundOffer {
   capacity     Int? // 収容人数（任意）
   note         String?           @db.Text // メモ（任意）
   contactEmail String // 代表者メールアドレス（連絡先・必須）
+  prefecture   String            @default("東京都") // 都道府県（地域絞り込み用・必須）
   status       GroundOfferStatus @default(OPEN)
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
@@ -273,6 +276,7 @@ model MatchRequest {
   memberCount  Int? // 参加予定人数（任意）
   note         String?            @db.Text // メモ（任意）
   contactEmail String // 代表者メールアドレス（連絡先・必須）
+  prefecture   String             @default("東京都") // 都道府県（地域絞り込み用・必須）
   status       MatchRequestStatus @default(OPEN)
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt

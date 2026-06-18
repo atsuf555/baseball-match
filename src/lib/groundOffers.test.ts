@@ -9,6 +9,7 @@ const valid = {
   capacity: 50,
   note: "雨天中止",
   contactEmail: "contact@example.com",
+  prefecture: "東京都",
 }
 
 test("validateGroundOfferInput: 妥当な入力を受け付け正規化する", () => {
@@ -49,6 +50,7 @@ test("validateGroundOfferInput: 収容人数は任意（省略可）", () => {
     location: valid.location,
     date: valid.date,
     contactEmail: valid.contactEmail,
+    prefecture: valid.prefecture,
   })
   assert.ok(r.ok)
   assert.equal(r.value.capacity, null)
@@ -83,5 +85,18 @@ test("validateGroundOfferInput: 代表者メールアドレスの形式が不正
   for (const contactEmail of ["not-an-email", "foo@", "@example.com"]) {
     const r = validateGroundOfferInput({ ...valid, contactEmail })
     assert.equal(r.ok, false, `contactEmail=${contactEmail} は不正なはず`)
+  }
+})
+
+test("validateGroundOfferInput: 都道府県を受け付ける", () => {
+  const r = validateGroundOfferInput({ ...valid, prefecture: "大阪府" })
+  assert.ok(r.ok)
+  assert.equal(r.value.prefecture, "大阪府")
+})
+
+test("validateGroundOfferInput: 都道府県が未指定/不正ならエラー", () => {
+  for (const prefecture of [undefined, null, "", "Tokyo", "東京"]) {
+    const r = validateGroundOfferInput({ ...valid, prefecture })
+    assert.equal(r.ok, false, `prefecture=${JSON.stringify(prefecture)} は不正なはず`)
   }
 })

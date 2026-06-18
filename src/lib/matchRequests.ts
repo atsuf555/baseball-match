@@ -1,6 +1,8 @@
 // 対戦相手募集の作成入力バリデーション（副作用なしの純粋関数）
 // API ルートとユニットテストの双方から利用する
 
+import { isPrefecture } from "./prefectures.ts"
+
 export type ValidatedMatchRequest = {
   date: Date
   location: string | null
@@ -8,6 +10,7 @@ export type ValidatedMatchRequest = {
   memberCount: number | null
   note: string | null
   contactEmail: string
+  prefecture: string
 }
 
 export type MatchRequestValidationResult =
@@ -121,5 +124,14 @@ export function validateMatchRequestInput(
     return { ok: false, error: "メールアドレスの形式が正しくありません" }
   }
 
-  return { ok: true, value: { date, location, level, memberCount, note, contactEmail } }
+  // 都道府県（必須）
+  if (!isPrefecture(data.prefecture)) {
+    return { ok: false, error: "都道府県を選択してください" }
+  }
+  const prefecture = data.prefecture
+
+  return {
+    ok: true,
+    value: { date, location, level, memberCount, note, contactEmail, prefecture },
+  }
 }

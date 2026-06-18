@@ -52,6 +52,7 @@ export async function POST(
       capacity: result.value.capacity,
       note: result.value.note,
       contactEmail: result.value.contactEmail,
+      prefecture: result.value.prefecture,
     },
   })
 

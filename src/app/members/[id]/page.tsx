@@ -41,6 +41,7 @@ export default async function MemberRequestDetailPage({
                   {memberRequest.level}
                 </h2>
               )}
+              <p className="text-xs text-zinc-400 mt-0.5">📍 {memberRequest.prefecture}</p>
             </div>
             <span
               className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${

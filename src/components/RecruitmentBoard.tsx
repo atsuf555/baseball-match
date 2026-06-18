@@ -7,12 +7,14 @@ import {
   RECRUITMENT_CATEGORIES,
   type RecruitmentCategoryKey,
 } from "@/lib/recruitmentCategories"
+import { PrefectureSelect } from "@/components/PrefectureSelect"
 
 // 助っ人募集カードのデータ（試合に紐づく）
 type HelperCard = {
   id: string
   category: "helper"
   teamName: string
+  prefecture: string
   startsAt: Date
   location: string
   positions: string | null
@@ -26,6 +28,7 @@ type MemberCard = {
   id: string
   category: "member"
   teamName: string
+  prefecture: string
   positions: string | null
   count: number
   level: string | null
@@ -38,6 +41,7 @@ type MatchCard = {
   id: string
   category: "match"
   teamName: string
+  prefecture: string
   date: Date
   location: string | null
   level: string | null
@@ -51,6 +55,7 @@ type GroundCard = {
   id: string
   category: "ground"
   teamName: string
+  prefecture: string
   groundName: string
   location: string
   date: Date
@@ -149,25 +154,28 @@ function CardInfoLine({ card }: { card: RecruitmentCard }) {
   }
 }
 
-// 募集掲示板。カテゴリで絞り込んで募集カードを表示する
+// 募集掲示板。カテゴリ・地域で絞り込んで募集カードを表示する
 export function RecruitmentBoard({ cards }: { cards: RecruitmentCard[] }) {
-  const [selected, setSelected] = useState<RecruitmentCategoryKey>("all")
+  const [selectedCategory, setSelectedCategory] = useState<RecruitmentCategoryKey>("all")
+  const [selectedPrefecture, setSelectedPrefecture] = useState("all")
 
   const filtered = cards.filter(
-    (card) => selected === "all" || card.category === selected
+    (card) =>
+      (selectedCategory === "all" || card.category === selectedCategory) &&
+      (selectedPrefecture === "all" || card.prefecture === selectedPrefecture)
   )
 
   return (
     <section>
       {/* カテゴリフィルター（横スクロール対応） */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-2 -mx-4 px-4">
         {RECRUITMENT_CATEGORIES.map((c) => (
           <button
             key={c.key}
             type="button"
-            onClick={() => setSelected(c.key)}
+            onClick={() => setSelectedCategory(c.key)}
             className={`shrink-0 whitespace-nowrap text-sm px-3 py-1.5 rounded-lg font-medium transition-colors ${
-              selected === c.key
+              selectedCategory === c.key
                 ? "bg-blue-600 text-white"
                 : "bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50"
             }`}
@@ -175,6 +183,11 @@ export function RecruitmentBoard({ cards }: { cards: RecruitmentCard[] }) {
             {c.label}
           </button>
         ))}
+      </div>
+
+      {/* 地域フィルター */}
+      <div className="mb-3">
+        <PrefectureSelect value={selectedPrefecture} onChange={setSelectedPrefecture} />
       </div>
 
       {filtered.length === 0 ? (
@@ -192,6 +205,7 @@ export function RecruitmentBoard({ cards }: { cards: RecruitmentCard[] }) {
                   </span>
                   <p className="text-xs text-zinc-400">{card.teamName}</p>
                   <CardBody card={card} />
+                  <p className="text-xs text-zinc-400 mt-0.5">📍 {card.prefecture}</p>
                 </div>
                 <span
                   className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${

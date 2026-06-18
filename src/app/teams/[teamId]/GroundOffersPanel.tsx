@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { formatGameDateTime } from "@/lib/utils"
+import { PREFECTURES, DEFAULT_PREFECTURE } from "@/lib/prefectures"
 
 type GroundOfferItem = {
   id: string
@@ -12,6 +13,7 @@ type GroundOfferItem = {
   capacity: number | null
   note: string | null
   contactEmail: string
+  prefecture: string
   status: "OPEN" | "CLOSED"
 }
 
@@ -42,6 +44,7 @@ export function GroundOffersPanel({
     const capacityRaw = ((fd.get("capacity") as string) ?? "").trim()
     const note = ((fd.get("note") as string) ?? "").trim()
     const contactEmail = ((fd.get("contactEmail") as string) ?? "").trim()
+    const prefecture = ((fd.get("prefecture") as string) ?? "").trim()
 
     if (!groundName) {
       setError("グラウンド名を入力してください")
@@ -59,6 +62,10 @@ export function GroundOffersPanel({
       setError("代表者メールアドレスを入力してください")
       return
     }
+    if (!prefecture) {
+      setError("都道府県を選択してください")
+      return
+    }
 
     setSubmitting(true)
     setError("")
@@ -74,6 +81,7 @@ export function GroundOffersPanel({
           capacity: capacityRaw === "" ? null : Number(capacityRaw),
           note: note === "" ? null : note,
           contactEmail,
+          prefecture,
         }),
       })
       const data = (await res.json()) as { error?: string }
@@ -236,6 +244,27 @@ export function GroundOffersPanel({
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             />
           </div>
+          <div>
+            <label
+              htmlFor="prefecture"
+              className="block text-xs font-medium text-zinc-600 mb-1"
+            >
+              都道府県<span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <select
+              id="prefecture"
+              name="prefecture"
+              required
+              defaultValue={DEFAULT_PREFECTURE}
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {PREFECTURES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             type="submit"
             disabled={submitting}
@@ -265,6 +294,7 @@ export function GroundOffersPanel({
                   <p className="text-xs text-zinc-500 mt-0.5">
                     {o.location} ・ {formatGameDateTime(new Date(o.date))}
                     {o.capacity != null && ` ・ 収容${o.capacity}人`}
+                    {` ・ 📍 ${o.prefecture}`}
                   </p>
                 </div>
                 <span

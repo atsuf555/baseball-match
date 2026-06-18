@@ -47,6 +47,7 @@ export default async function HelperRequestDetailPage({
               <h2 className="text-lg font-bold text-zinc-900 mt-0.5">
                 {formatGameDateTime(helperRequest.game.startsAt)}
               </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">📍 {helperRequest.prefecture}</p>
             </div>
             <span
               className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${

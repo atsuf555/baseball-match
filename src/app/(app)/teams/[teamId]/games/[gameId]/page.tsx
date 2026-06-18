@@ -155,6 +155,7 @@ export default async function GameDetailPage({
               count: r.count,
               note: r.note,
               contactEmail: r.contactEmail,
+              prefecture: r.prefecture,
               status: r.status,
             }))}
           />

@@ -195,6 +195,7 @@ export default async function TeamDetailPage({
               level: r.level,
               note: r.note,
               contactEmail: r.contactEmail,
+              prefecture: r.prefecture,
               status: r.status,
             }))}
           />
@@ -212,6 +213,7 @@ export default async function TeamDetailPage({
               capacity: o.capacity,
               note: o.note,
               contactEmail: o.contactEmail,
+              prefecture: o.prefecture,
               status: o.status,
             }))}
           />
@@ -229,6 +231,7 @@ export default async function TeamDetailPage({
               memberCount: r.memberCount,
               note: r.note,
               contactEmail: r.contactEmail,
+              prefecture: r.prefecture,
               status: r.status,
             }))}
           />

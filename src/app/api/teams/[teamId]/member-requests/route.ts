@@ -51,6 +51,7 @@ export async function POST(
       level: result.value.level,
       note: result.value.note,
       contactEmail: result.value.contactEmail,
+      prefecture: result.value.prefecture,
     },
   })
 

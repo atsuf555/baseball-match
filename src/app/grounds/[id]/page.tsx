@@ -40,6 +40,7 @@ export default async function GroundOfferDetailPage({
               <h2 className="text-lg font-bold text-zinc-900 mt-0.5">
                 {groundOffer.groundName}
               </h2>
+              <p className="text-xs text-zinc-400 mt-0.5">📍 {groundOffer.prefecture}</p>
             </div>
             <span
               className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${

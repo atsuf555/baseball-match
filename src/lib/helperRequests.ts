@@ -1,11 +1,14 @@
 // 助っ人募集の作成入力バリデーション（副作用なしの純粋関数）
 // API ルートとユニットテストの双方から利用する
 
+import { isPrefecture } from "./prefectures.ts"
+
 export type ValidatedHelperRequest = {
   positions: string | null
   count: number
   note: string | null
   contactEmail: string
+  prefecture: string
 }
 
 export type HelperRequestValidationResult =
@@ -88,5 +91,11 @@ export function validateHelperRequestInput(
     return { ok: false, error: "メールアドレスの形式が正しくありません" }
   }
 
-  return { ok: true, value: { positions, count, note, contactEmail } }
+  // 都道府県（必須）
+  if (!isPrefecture(data.prefecture)) {
+    return { ok: false, error: "都道府県を選択してください" }
+  }
+  const prefecture = data.prefecture
+
+  return { ok: true, value: { positions, count, note, contactEmail, prefecture } }
 }
