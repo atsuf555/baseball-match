@@ -4,6 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // DATABASE_URL はプーリングを経由しない直接接続（port 5432）を指す。
+  // prisma migrate がアドバイザリロックにセッション状態を必要とするため。
   url      = env("DATABASE_URL")
 }
 
