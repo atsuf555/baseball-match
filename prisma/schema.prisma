@@ -64,15 +64,27 @@ model User {
 }
 
 model Team {
-  id          String   @id @default(cuid())
-  name        String
-  description String?  @db.Text
-  inviteCode  String   @unique
-  createdById String
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  name         String
+  description  String?  @db.Text
+  inviteCode   String   @unique
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  // 連絡先（すべて任意・チーム詳細ページで一般公開される）
+  twitterUrl   String?
+  instagramUrl String?
+  contactEmail String?
 
   members TeamMember[]
   games   Game[]
+}
+
+// 試合結果（自チームスコアと相手スコアから自動計算する）
+enum GameResult {
+  WIN
+  LOSE
+  DRAW
 }
 
 model Game {
@@ -86,6 +98,14 @@ model Game {
   note        String?  @db.Text // メモ（任意）
   createdById String
   createdAt   DateTime @default(now())
+
+  // 試合結果（任意・管理者が試合後に入力する）
+  opponentName   String? // 対戦相手名
+  ourScore       Int? // 自チームスコア
+  opponentScore  Int? // 相手スコア
+  tournamentName String? // 大会名（任意）
+  summary        String?     @db.Text // 戦評（任意）
+  result         GameResult? // ourScore/opponentScore から自動計算される
 
   team           Team            @relation(fields: [teamId], references: [id], onDelete: Cascade)
   attendances    Attendance[]

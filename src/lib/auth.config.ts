@@ -13,7 +13,9 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user
       const isProtected =
         nextUrl.pathname.startsWith("/dashboard") ||
-        nextUrl.pathname.startsWith("/teams")
+        nextUrl.pathname === "/teams/new" ||
+        nextUrl.pathname === "/teams/join" ||
+        /^\/teams\/[^/]+\/(edit|games)(\/.*)?$/.test(nextUrl.pathname)
 
       if (isProtected && !isLoggedIn) {
         // 未認証 → サインインページへリダイレクト（pages.signIn = "/"）

@@ -13,11 +13,19 @@ import type { NextRequest } from "next/server"
 // 実際のセッション検証は (app)/layout.tsx 側の auth()（DB検証あり）に委ねる。
 const SESSION_COOKIE_NAMES = ["authjs.session-token", "__Secure-authjs.session-token"]
 
+// /teams/[teamId] とその場直下（チーム詳細・成績）は誰でも閲覧できる公開ページ。
+// 一方で /teams/new, /teams/join, /teams/[teamId]/edit, /teams/[teamId]/games/** は
+// ログイン必須（試合の作成・編集・出欠回答・助っ人募集の管理を含むため）。
+const TEAM_SUBPATH_PROTECTED = /^\/teams\/[^/]+\/(edit|games)(\/.*)?$/
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isLoggedIn = SESSION_COOKIE_NAMES.some((name) => request.cookies.has(name))
   const isProtected =
-    pathname.startsWith("/dashboard") || pathname.startsWith("/teams")
+    pathname.startsWith("/dashboard") ||
+    pathname === "/teams/new" ||
+    pathname === "/teams/join" ||
+    TEAM_SUBPATH_PROTECTED.test(pathname)
 
   if (isProtected && !isLoggedIn) {
     const signInUrl = new URL("/", request.url)

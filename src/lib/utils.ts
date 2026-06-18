@@ -32,3 +32,10 @@ export function formatGameDateTime(date: Date): string {
     timeZone: "Asia/Tokyo",
   }).format(date)
 }
+
+// 日本時間での年を取得する（サーバーのタイムゾーンに依存しない）
+export function getJSTYear(date: Date): number {
+  return Number(
+    new Intl.DateTimeFormat("en-US", { year: "numeric", timeZone: "Asia/Tokyo" }).format(date)
+  )
+}

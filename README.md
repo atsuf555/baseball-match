@@ -13,6 +13,9 @@
 | 試合作成・試合一覧 | ✅ 実装済み |
 | 試合の出欠管理 | ✅ 実装済み |
 | 助っ人募集 | ✅ 実装済み |
+| 試合結果・年別勝敗成績 | ✅ 実装済み |
+| チーム詳細・助っ人募集・トップページの公開閲覧 | ✅ 実装済み |
+| チーム連絡先（SNS・メール）の公開 | ✅ 実装済み |
 
 ---
 
@@ -452,6 +455,21 @@ await fetch(`/api/games/GAME_ID/helper-requests/REQUEST_ID`, {
 
 ---
 
+## サンプルデータの投入（オプション）
+
+開発・デモ用に、20チーム × 5年分（2020〜2024年）× 20試合 = 2000試合のサンプルデータを投入できます。
+
+```bash
+set -a && source .env.local && set +a && npm run db:seed
+```
+
+- チーム名・対戦相手名はすべて架空の草野球チームです
+- 各試合には対戦相手・スコア・大会名（一部）・戦評が入ります
+- 各チームには連絡先情報（X/Instagram/メール）も入ります
+- 既存データは削除されません（毎回実行すると追加投入されます。クリーンな状態で試したい場合は事前に `npx prisma studio` 等でテーブルをクリアしてください）
+
+---
+
 ## データベース確認（オプション）
 
 Prisma Studio でデータを直接確認できます（手順6と同じく `.env.local` を読み込みます）：
@@ -520,6 +538,15 @@ DATABASE_URL="（Supabaseの Direct connection URL）" npx prisma db push
 成功すると `The database is now in sync with your Prisma schema.` と表示されます。
 以降、スキーマ（`prisma/schema.prisma`）を変更してデプロイするたびに、同じコマンドを再実行してください
 （このコマンドは Vercel のビルドでは自動実行されません。スキーマ変更を伴わないデプロイでは不要です）。
+
+### 5. 本番DBへのサンプルデータ投入（任意）
+
+本番Supabase DBに対してサンプルデータを投入する場合は、**Direct connection**（port 5432）のURLを使って実行します。
+本番で実行する場合は実データと混ざらないよう、実運用開始前のみに留めてください。
+
+```bash
+DATABASE_URL="（Supabaseの Direct connection URL）" npm run db:seed
+```
 
 ---
 
