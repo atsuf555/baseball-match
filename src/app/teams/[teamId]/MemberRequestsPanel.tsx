@@ -3,22 +3,23 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 
-type HelperRequestItem = {
+type MemberRequestItem = {
   id: string
   positions: string | null
   count: number
+  level: string | null
   note: string | null
   contactEmail: string
   status: "OPEN" | "CLOSED"
 }
 
-// 管理者向け：助っ人募集の作成・応募者確認・締め切りを行うパネル
-export function HelperRequestsPanel({
-  gameId,
+// 管理者向け：メンバー募集の作成・締め切りを行うパネル
+export function MemberRequestsPanel({
+  teamId,
   initialRequests,
 }: {
-  gameId: string
-  initialRequests: HelperRequestItem[]
+  teamId: string
+  initialRequests: MemberRequestItem[]
 }) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
@@ -35,6 +36,7 @@ export function HelperRequestsPanel({
     const fd = new FormData(form)
     const positions = ((fd.get("positions") as string) ?? "").trim()
     const countRaw = ((fd.get("count") as string) ?? "").trim()
+    const level = ((fd.get("level") as string) ?? "").trim()
     const note = ((fd.get("note") as string) ?? "").trim()
     const contactEmail = ((fd.get("contactEmail") as string) ?? "").trim()
 
@@ -51,12 +53,13 @@ export function HelperRequestsPanel({
     setError("")
 
     try {
-      const res = await fetch(`/api/games/${gameId}/helper-requests`, {
+      const res = await fetch(`/api/teams/${teamId}/member-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           positions: positions === "" ? null : positions,
           count: Number(countRaw),
+          level: level === "" ? null : level,
           note: note === "" ? null : note,
           contactEmail,
         }),
@@ -85,7 +88,7 @@ export function HelperRequestsPanel({
 
     try {
       const res = await fetch(
-        `/api/games/${gameId}/helper-requests/${requestId}`,
+        `/api/teams/${teamId}/member-requests/${requestId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -110,7 +113,7 @@ export function HelperRequestsPanel({
   return (
     <section>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-zinc-900">助っ人募集</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">メンバー募集</h3>
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
@@ -130,7 +133,7 @@ export function HelperRequestsPanel({
               htmlFor="positions"
               className="block text-xs font-medium text-zinc-600 mb-1"
             >
-              ポジション（任意）
+              募集ポジション（任意）
             </label>
             <input
               id="positions"
@@ -163,6 +166,22 @@ export function HelperRequestsPanel({
           </div>
           <div>
             <label
+              htmlFor="level"
+              className="block text-xs font-medium text-zinc-600 mb-1"
+            >
+              レベル感（任意）
+            </label>
+            <input
+              id="level"
+              name="level"
+              type="text"
+              maxLength={100}
+              placeholder="例: 初心者歓迎、中級者以上"
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            />
+          </div>
+          <div>
+            <label
               htmlFor="note"
               className="block text-xs font-medium text-zinc-600 mb-1"
             >
@@ -173,7 +192,7 @@ export function HelperRequestsPanel({
               name="note"
               rows={2}
               maxLength={500}
-              placeholder="例: 経験者優先、当日18時集合"
+              placeholder="例: 週末中心の活動です"
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white resize-none"
             />
           </div>
@@ -222,6 +241,7 @@ export function HelperRequestsPanel({
                   </p>
                   <p className="text-xs text-zinc-500 mt-0.5">
                     募集人数 {r.count}人
+                    {r.level && ` ・ ${r.level}`}
                   </p>
                 </div>
                 <span

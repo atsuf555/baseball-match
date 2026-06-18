@@ -64,20 +64,24 @@ model User {
 }
 
 model Team {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?  @db.Text
-  inviteCode   String   @unique
-  createdById  String
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  inviteCode  String   @unique
+  createdById String
+  createdAt   DateTime @default(now())
 
   // 連絡先（すべて任意・チーム詳細ページで一般公開される）
   twitterUrl   String?
   instagramUrl String?
   contactEmail String?
 
-  members TeamMember[]
-  games   Game[]
+  members        TeamMember[]
+  games          Game[]
+  helperRequests HelperRequest[]
+  memberRequests MemberRequest[]
+  groundOffers   GroundOffer[]
+  matchRequests  MatchRequest[]
 }
 
 // 試合結果（自チームスコアと相手スコアから自動計算する）
@@ -166,20 +170,24 @@ enum HelperRequestStatus {
 
 // 試合ごとの助っ人募集（管理者が作成）
 model HelperRequest {
-  id          String              @id @default(cuid())
-  gameId      String
-  createdById String
-  positions   String? // 募集ポジション（任意・自由記述）
-  capacity    Int // 募集人数
-  note        String?             @db.Text // メモ（任意）
-  status      HelperRequestStatus @default(OPEN)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id           String              @id @default(cuid())
+  gameId       String
+  teamId       String
+  createdById  String
+  positions    String? // 募集ポジション（任意・自由記述）
+  count        Int                 @default(1) // 募集人数
+  note         String?             @db.Text // メモ（任意）
+  contactEmail String // 代表者メールアドレス（連絡先・必須）
+  status       HelperRequestStatus @default(OPEN)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
 
   game         Game                @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  team         Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
   applications HelperApplication[]
 
   @@index([gameId])
+  @@index([teamId])
 }
 
 // 助っ人募集への応募（チーム外ユーザーが応募する。1募集につき1ユーザー1件）
@@ -195,4 +203,81 @@ model HelperApplication {
   @@unique([helperRequestId, userId])
   @@index([helperRequestId])
   @@index([userId])
+}
+
+// メンバー募集の状態
+enum MemberRequestStatus {
+  OPEN // 募集中
+  CLOSED // 募集終了
+}
+
+// チームのメンバー募集（管理者が作成）
+model MemberRequest {
+  id           String              @id @default(cuid())
+  teamId       String
+  createdById  String
+  positions    String? // 募集ポジション（任意・自由記述）
+  count        Int                 @default(1) // 募集人数
+  level        String? // レベル感（任意・例：初心者歓迎、中級者以上など）
+  note         String?             @db.Text // メモ（任意）
+  contactEmail String // 代表者メールアドレス（連絡先・必須）
+  status       MemberRequestStatus @default(OPEN)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+// グラウンド譲渡の状態
+enum GroundOfferStatus {
+  OPEN // 募集中
+  CLOSED // 募集終了
+}
+
+// チームのグラウンド譲渡（管理者が作成）
+model GroundOffer {
+  id           String            @id @default(cuid())
+  teamId       String
+  createdById  String
+  groundName   String // グラウンド名（必須）
+  location     String // 場所・住所（必須）
+  date         DateTime // 譲渡希望日時（必須）
+  capacity     Int? // 収容人数（任意）
+  note         String?           @db.Text // メモ（任意）
+  contactEmail String // 代表者メールアドレス（連絡先・必須）
+  status       GroundOfferStatus @default(OPEN)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+// 対戦相手募集の状態
+enum MatchRequestStatus {
+  OPEN // 募集中
+  CLOSED // 募集終了
+}
+
+// チームの対戦相手募集（管理者が作成）
+model MatchRequest {
+  id           String             @id @default(cuid())
+  teamId       String
+  createdById  String
+  date         DateTime // 試合希望日時（必須）
+  location     String? // 希望場所（任意）
+  level        String? // レベル感（任意・例：初心者歓迎、中級者以上など）
+  memberCount  Int? // 参加予定人数（任意）
+  note         String?            @db.Text // メモ（任意）
+  contactEmail String // 代表者メールアドレス（連絡先・必須）
+  status       MatchRequestStatus @default(OPEN)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
 }

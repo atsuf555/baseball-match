@@ -26,9 +26,6 @@ export default async function GameDetailPage({
     include: {
       team: { select: { id: true, name: true } },
       helperRequests: {
-        include: {
-          applications: { include: { user: { select: { name: true, email: true } } } },
-        },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -155,12 +152,10 @@ export default async function GameDetailPage({
             initialRequests={game.helperRequests.map((r) => ({
               id: r.id,
               positions: r.positions,
-              capacity: r.capacity,
+              count: r.count,
               note: r.note,
+              contactEmail: r.contactEmail,
               status: r.status,
-              applicants: r.applications.map((a) => ({
-                name: a.user.name ?? a.user.email ?? "名前未設定",
-              })),
             }))}
           />
         )}

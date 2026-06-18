@@ -1,27 +1,29 @@
-// 助っ人募集の作成入力バリデーション（副作用なしの純粋関数）
+// メンバー募集の作成入力バリデーション（副作用なしの純粋関数）
 // API ルートとユニットテストの双方から利用する
 
-export type ValidatedHelperRequest = {
+export type ValidatedMemberRequest = {
   positions: string | null
   count: number
+  level: string | null
   note: string | null
   contactEmail: string
 }
 
-export type HelperRequestValidationResult =
-  | { ok: true; value: ValidatedHelperRequest }
+export type MemberRequestValidationResult =
+  | { ok: true; value: ValidatedMemberRequest }
   | { ok: false; error: string }
 
 const MAX_POSITIONS_LENGTH = 100
+const MAX_LEVEL_LENGTH = 100
 const MAX_NOTE_LENGTH = 500
 const MAX_COUNT = 99
 const MAX_CONTACT_EMAIL_LENGTH = 254
 // 簡易的なメール形式チェック（厳密なRFC準拠ではなく、明らかな入力ミスを防ぐ目的）
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export function validateHelperRequestInput(
+export function validateMemberRequestInput(
   body: unknown
-): HelperRequestValidationResult {
+): MemberRequestValidationResult {
   if (typeof body !== "object" || body === null) {
     return { ok: false, error: "リクエストの形式が不正です" }
   }
@@ -56,6 +58,22 @@ export function validateHelperRequestInput(
     positions = trimmed === "" ? null : trimmed
   }
 
+  // レベル感（任意）
+  let level: string | null = null
+  if (data.level !== undefined && data.level !== null) {
+    if (typeof data.level !== "string") {
+      return { ok: false, error: "レベル感の形式が不正です" }
+    }
+    const trimmed = data.level.trim()
+    if (trimmed.length > MAX_LEVEL_LENGTH) {
+      return {
+        ok: false,
+        error: `レベル感は${MAX_LEVEL_LENGTH}文字以内で入力してください`,
+      }
+    }
+    level = trimmed === "" ? null : trimmed
+  }
+
   // メモ（任意）
   let note: string | null = null
   if (data.note !== undefined && data.note !== null) {
@@ -88,5 +106,5 @@ export function validateHelperRequestInput(
     return { ok: false, error: "メールアドレスの形式が正しくありません" }
   }
 
-  return { ok: true, value: { positions, count, note, contactEmail } }
+  return { ok: true, value: { positions, count, level, note, contactEmail } }
 }

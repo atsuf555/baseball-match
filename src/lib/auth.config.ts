@@ -21,10 +21,6 @@ export const authConfig: NextAuthConfig = {
         // 未認証 → サインインページへリダイレクト（pages.signIn = "/"）
         return false
       }
-      if (nextUrl.pathname === "/" && isLoggedIn) {
-        // ログイン済みでランディングページ訪問 → ダッシュボードへ
-        return Response.redirect(new URL("/dashboard", nextUrl))
-      }
       return true
     },
   },

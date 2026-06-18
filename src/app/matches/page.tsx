@@ -2,25 +2,13 @@ import { prisma } from "@/lib/prisma"
 import { formatGameDateTime } from "@/lib/utils"
 import Link from "next/link"
 
-// 助っ人募集の公開一覧。ログイン不要で閲覧できる
-export default async function HelpersPage() {
-  // リクエストごとに実行される動的 Server Component なので現在時刻の参照は妥当
-  const now = new Date()
-
-  const requests = await prisma.helperRequest.findMany({
-    where: { game: { startsAt: { gte: now } } },
+// 対戦相手募集の公開一覧。ログイン不要で閲覧できる
+export default async function MatchRequestsPage() {
+  const requests = await prisma.matchRequest.findMany({
     include: {
-      game: {
-        select: {
-          id: true,
-          startsAt: true,
-          location: true,
-          startTime: true,
-          team: { select: { name: true } },
-        },
-      },
+      team: { select: { name: true } },
     },
-    orderBy: [{ status: "asc" }, { game: { startsAt: "asc" } }],
+    orderBy: [{ status: "asc" }, { date: "asc" }],
   })
 
   return (
@@ -33,14 +21,14 @@ export default async function HelpersPage() {
         >
           ←
         </Link>
-        <h1 className="font-semibold text-zinc-900 truncate">助っ人募集</h1>
+        <h1 className="font-semibold text-zinc-900 truncate">対戦相手募集</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
         {requests.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center">
             <p className="text-sm text-zinc-400">
-              現在募集中の助っ人はありません
+              現在募集中の対戦相手はありません
             </p>
           </div>
         ) : (
@@ -52,12 +40,12 @@ export default async function HelpersPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-zinc-400">{r.game.team.name}</p>
+                    <p className="text-xs text-zinc-400">{r.team.name}</p>
                     <h2 className="text-sm font-semibold text-zinc-900 mt-0.5">
-                      {formatGameDateTime(r.game.startsAt)}
+                      {formatGameDateTime(r.date)}
                     </h2>
                     <p className="text-sm text-zinc-500 mt-0.5">
-                      {r.game.location} ・ 開始 {r.game.startTime}
+                      {r.location ?? "場所未定"}
                     </p>
                   </div>
                   <span
@@ -72,8 +60,12 @@ export default async function HelpersPage() {
                 </div>
 
                 <p className="text-sm text-zinc-700 mt-3">
-                  {r.positions ?? "ポジション指定なし"}
-                  <span className="text-zinc-400 ml-1.5">（募集 {r.count}人）</span>
+                  {r.level ?? "レベル指定なし"}
+                  {r.memberCount != null && (
+                    <span className="text-zinc-400 ml-1.5">
+                      （参加予定 {r.memberCount}人）
+                    </span>
+                  )}
                 </p>
 
                 {r.note && (
@@ -83,7 +75,7 @@ export default async function HelpersPage() {
                 )}
 
                 <Link
-                  href={`/helpers/${r.id}`}
+                  href={`/matches/${r.id}`}
                   className="inline-block text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors mt-3"
                 >
                   詳細を見る

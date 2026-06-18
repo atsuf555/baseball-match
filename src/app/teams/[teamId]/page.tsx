@@ -5,6 +5,9 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { CopyButton } from "@/components/CopyButton"
 import { TeamContactLinks } from "@/components/TeamContactLinks"
+import { MemberRequestsPanel } from "./MemberRequestsPanel"
+import { GroundOffersPanel } from "./GroundOffersPanel"
+import { MatchRequestsPanel } from "./MatchRequestsPanel"
 import type { Game, GameResult } from "@prisma/client"
 
 const RESULT_META: Record<GameResult, { label: string; className: string }> = {
@@ -32,6 +35,15 @@ export default async function TeamDetailPage({
           user: { select: { name: true, email: true, image: true } },
         },
         orderBy: { joinedAt: "asc" },
+      },
+      memberRequests: {
+        orderBy: { createdAt: "desc" },
+      },
+      groundOffers: {
+        orderBy: { createdAt: "desc" },
+      },
+      matchRequests: {
+        orderBy: { createdAt: "desc" },
       },
     },
   })
@@ -170,6 +182,56 @@ export default async function TeamDetailPage({
               <CopyButton text={team.inviteCode} />
             </div>
           </section>
+        )}
+
+        {/* メンバー募集の作成・締め切り（管理者のみ） */}
+        {isAdmin && (
+          <MemberRequestsPanel
+            teamId={team.id}
+            initialRequests={team.memberRequests.map((r) => ({
+              id: r.id,
+              positions: r.positions,
+              count: r.count,
+              level: r.level,
+              note: r.note,
+              contactEmail: r.contactEmail,
+              status: r.status,
+            }))}
+          />
+        )}
+
+        {/* グラウンド譲渡の作成・締め切り（管理者のみ） */}
+        {isAdmin && (
+          <GroundOffersPanel
+            teamId={team.id}
+            initialOffers={team.groundOffers.map((o) => ({
+              id: o.id,
+              groundName: o.groundName,
+              location: o.location,
+              date: o.date.toISOString(),
+              capacity: o.capacity,
+              note: o.note,
+              contactEmail: o.contactEmail,
+              status: o.status,
+            }))}
+          />
+        )}
+
+        {/* 対戦相手募集の作成・締め切り（管理者のみ） */}
+        {isAdmin && (
+          <MatchRequestsPanel
+            teamId={team.id}
+            initialRequests={team.matchRequests.map((r) => ({
+              id: r.id,
+              date: r.date.toISOString(),
+              location: r.location,
+              level: r.level,
+              memberCount: r.memberCount,
+              note: r.note,
+              contactEmail: r.contactEmail,
+              status: r.status,
+            }))}
+          />
         )}
 
         {/* 試合 */}

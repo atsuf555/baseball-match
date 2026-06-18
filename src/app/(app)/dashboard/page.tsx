@@ -1,7 +1,8 @@
-import { auth, signOut } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { CopyButton } from "@/components/CopyButton"
+import { AppHeader } from "@/components/AppHeader"
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -24,38 +25,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-zinc-200 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <span className="font-bold text-zinc-900 text-lg">BaseHub</span>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/helpers"
-            className="text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium"
-          >
-            助っ人募集
-          </Link>
-          {session?.user?.image && (
-            <img
-              src={session.user.image}
-              alt={session.user.name ?? "ユーザー"}
-              className="w-8 h-8 rounded-full border border-zinc-200"
-            />
-          )}
-          <form
-            action={async () => {
-              "use server"
-              await signOut({ redirectTo: "/" })
-            }}
-          >
-            <button
-              type="submit"
-              className="text-sm text-zinc-500 hover:text-zinc-700 transition-colors"
-            >
-              ログアウト
-            </button>
-          </form>
-        </div>
-      </header>
+      <AppHeader userImage={session!.user.image} userName={session!.user.name} />
 
       <main className="max-w-lg mx-auto px-4 py-6">
         {/* セクションヘッダー */}

@@ -1,26 +1,13 @@
 import { prisma } from "@/lib/prisma"
-import { formatGameDateTime } from "@/lib/utils"
 import Link from "next/link"
 
-// 助っ人募集の公開一覧。ログイン不要で閲覧できる
-export default async function HelpersPage() {
-  // リクエストごとに実行される動的 Server Component なので現在時刻の参照は妥当
-  const now = new Date()
-
-  const requests = await prisma.helperRequest.findMany({
-    where: { game: { startsAt: { gte: now } } },
+// メンバー募集の公開一覧。ログイン不要で閲覧できる
+export default async function MemberRequestsPage() {
+  const requests = await prisma.memberRequest.findMany({
     include: {
-      game: {
-        select: {
-          id: true,
-          startsAt: true,
-          location: true,
-          startTime: true,
-          team: { select: { name: true } },
-        },
-      },
+      team: { select: { name: true } },
     },
-    orderBy: [{ status: "asc" }, { game: { startsAt: "asc" } }],
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
   })
 
   return (
@@ -33,14 +20,14 @@ export default async function HelpersPage() {
         >
           ←
         </Link>
-        <h1 className="font-semibold text-zinc-900 truncate">助っ人募集</h1>
+        <h1 className="font-semibold text-zinc-900 truncate">メンバー募集</h1>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6">
         {requests.length === 0 ? (
           <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center">
             <p className="text-sm text-zinc-400">
-              現在募集中の助っ人はありません
+              現在募集中のメンバーはありません
             </p>
           </div>
         ) : (
@@ -52,13 +39,12 @@ export default async function HelpersPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-zinc-400">{r.game.team.name}</p>
-                    <h2 className="text-sm font-semibold text-zinc-900 mt-0.5">
-                      {formatGameDateTime(r.game.startsAt)}
-                    </h2>
-                    <p className="text-sm text-zinc-500 mt-0.5">
-                      {r.game.location} ・ 開始 {r.game.startTime}
-                    </p>
+                    <p className="text-xs text-zinc-400">{r.team.name}</p>
+                    {r.level && (
+                      <h2 className="text-sm font-semibold text-zinc-900 mt-0.5">
+                        {r.level}
+                      </h2>
+                    )}
                   </div>
                   <span
                     className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${
@@ -83,7 +69,7 @@ export default async function HelpersPage() {
                 )}
 
                 <Link
-                  href={`/helpers/${r.id}`}
+                  href={`/members/${r.id}`}
                   className="inline-block text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors mt-3"
                 >
                   詳細を見る

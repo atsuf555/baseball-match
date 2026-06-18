@@ -32,9 +32,6 @@ export function middleware(request: NextRequest) {
     signInUrl.searchParams.set("callbackUrl", request.url)
     return NextResponse.redirect(signInUrl)
   }
-  if (pathname === "/" && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
   return NextResponse.next()
 }
 

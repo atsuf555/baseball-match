@@ -2,23 +2,26 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { formatGameDateTime } from "@/lib/utils"
 
-type HelperRequestItem = {
+type MatchRequestItem = {
   id: string
-  positions: string | null
-  count: number
+  date: string
+  location: string | null
+  level: string | null
+  memberCount: number | null
   note: string | null
   contactEmail: string
   status: "OPEN" | "CLOSED"
 }
 
-// 管理者向け：助っ人募集の作成・応募者確認・締め切りを行うパネル
-export function HelperRequestsPanel({
-  gameId,
+// 管理者向け：対戦相手募集の作成・締め切りを行うパネル
+export function MatchRequestsPanel({
+  teamId,
   initialRequests,
 }: {
-  gameId: string
-  initialRequests: HelperRequestItem[]
+  teamId: string
+  initialRequests: MatchRequestItem[]
 }) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
@@ -33,13 +36,15 @@ export function HelperRequestsPanel({
 
     const form = e.currentTarget
     const fd = new FormData(form)
-    const positions = ((fd.get("positions") as string) ?? "").trim()
-    const countRaw = ((fd.get("count") as string) ?? "").trim()
+    const date = ((fd.get("date") as string) ?? "").trim()
+    const location = ((fd.get("location") as string) ?? "").trim()
+    const level = ((fd.get("level") as string) ?? "").trim()
+    const memberCountRaw = ((fd.get("memberCount") as string) ?? "").trim()
     const note = ((fd.get("note") as string) ?? "").trim()
     const contactEmail = ((fd.get("contactEmail") as string) ?? "").trim()
 
-    if (!countRaw) {
-      setError("募集人数を入力してください")
+    if (!date) {
+      setError("試合希望日時を入力してください")
       return
     }
     if (!contactEmail) {
@@ -51,12 +56,14 @@ export function HelperRequestsPanel({
     setError("")
 
     try {
-      const res = await fetch(`/api/games/${gameId}/helper-requests`, {
+      const res = await fetch(`/api/teams/${teamId}/match-requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          positions: positions === "" ? null : positions,
-          count: Number(countRaw),
+          date,
+          location: location === "" ? null : location,
+          level: level === "" ? null : level,
+          memberCount: memberCountRaw === "" ? null : Number(memberCountRaw),
           note: note === "" ? null : note,
           contactEmail,
         }),
@@ -84,14 +91,11 @@ export function HelperRequestsPanel({
     setError("")
 
     try {
-      const res = await fetch(
-        `/api/games/${gameId}/helper-requests/${requestId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "CLOSED" }),
-        }
-      )
+      const res = await fetch(`/api/teams/${teamId}/match-requests/${requestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CLOSED" }),
+      })
       const data = (await res.json()) as { error?: string }
 
       if (!res.ok) {
@@ -110,7 +114,7 @@ export function HelperRequestsPanel({
   return (
     <section>
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-zinc-900">助っ人募集</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">対戦相手募集</h3>
         <button
           type="button"
           onClick={() => setShowForm((v) => !v)}
@@ -127,37 +131,66 @@ export function HelperRequestsPanel({
         >
           <div>
             <label
-              htmlFor="positions"
+              htmlFor="date"
               className="block text-xs font-medium text-zinc-600 mb-1"
             >
-              ポジション（任意）
+              試合希望日時<span className="text-red-500 ml-0.5">*</span>
             </label>
             <input
-              id="positions"
-              name="positions"
+              id="date"
+              name="date"
+              type="datetime-local"
+              required
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="location"
+              className="block text-xs font-medium text-zinc-600 mb-1"
+            >
+              希望場所（任意）
+            </label>
+            <input
+              id="location"
+              name="location"
               type="text"
-              maxLength={100}
-              placeholder="例: ピッチャー、キャッチャー"
+              maxLength={200}
+              placeholder="例: 東京都内の球場"
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             />
           </div>
           <div>
             <label
-              htmlFor="count"
+              htmlFor="level"
               className="block text-xs font-medium text-zinc-600 mb-1"
             >
-              募集人数<span className="text-red-500 ml-0.5">*</span>
+              レベル感（任意）
             </label>
             <input
-              id="count"
-              name="count"
+              id="level"
+              name="level"
+              type="text"
+              maxLength={100}
+              placeholder="例: 初心者歓迎、中級者以上"
+              className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="memberCount"
+              className="block text-xs font-medium text-zinc-600 mb-1"
+            >
+              参加予定人数（任意）
+            </label>
+            <input
+              id="memberCount"
+              name="memberCount"
               type="number"
               min={1}
               max={99}
-              defaultValue={1}
               inputMode="numeric"
-              required
-              placeholder="例: 3"
+              placeholder="例: 9"
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             />
           </div>
@@ -173,7 +206,7 @@ export function HelperRequestsPanel({
               name="note"
               rows={2}
               maxLength={500}
-              placeholder="例: 経験者優先、当日18時集合"
+              placeholder="例: 練習試合希望、午前中希望"
               className="w-full border border-zinc-300 rounded-lg px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white resize-none"
             />
           </div>
@@ -218,10 +251,12 @@ export function HelperRequestsPanel({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-zinc-900">
-                    {r.positions ?? "ポジション指定なし"}
+                    {formatGameDateTime(new Date(r.date))}
                   </p>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    募集人数 {r.count}人
+                    {r.location ?? "場所未定"}
+                    {r.level && ` ・ ${r.level}`}
+                    {r.memberCount != null && ` ・ 参加予定 ${r.memberCount}人`}
                   </p>
                 </div>
                 <span
